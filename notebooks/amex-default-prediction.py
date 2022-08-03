@@ -44,3 +44,66 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+# -
+
+# ### Load AMEX Datasets
+# **Source (Raw Data):**
+# - https://www.kaggle.com/competitions/amex-default-prediction/data
+#
+# **Source (Compressed Data):**
+# - https://www.kaggle.com/datasets/munumbutt/amexfeather
+#
+# // TODO: Add information regarding the source, advantages and limitations in using the compressed datasets
+
+# +
+# Load compressed datasets
+# Source: https://www.kaggle.com/datasets/munumbutt/amexfeather
+
+train = pd.read_feather("./data/raw/train_data.ftr")
+test = pd.read_feather("./data/raw/test_data.ftr")
+# -
+
+# Preview the first five rows of the training data
+train.head()
+
+# Print the shape of the DataFrame for the training set
+print(f"Training Data: Shape == {train.shape}")
+print(
+    f"\nThe training set consists of {train.shape[0]} observations with {train.shape[1]} features and 1 target variable."
+)
+
+train.info()
+
+# Preview the first five rows of the testing set
+test.head(5)
+
+# Print the shape of the DataFrame for the testing dataset
+print(f"Testing Data: Shape == {test.shape}")
+print(
+    f"\nThe testing set consists of {test.shape[0]} observations with {test.shape[1]} features."
+)
+
+test.info()
+
+# +
+# 1-2) Sum the number of incomplete (missing or null) values in each column
+# 3-4) Divide by the number of observations and multipy by 100 to make it a percentage.
+#   5) Lastly, sort the values in descending order to better observe feature incompleteness.
+pct_incomplete = (
+    train.isna().sum().div(len(train)).mul(100).sort_values(ascending=False)
+)
+
+# Subset pct_incomplete to select incomplete features (Threshold: >20%)
+incomplete_features = set(pct_incomplete[pct_incomplete >= 20].index)
+
+# +
+# Print the count of incomplete features
+print(
+    f"{len(incomplete_features)} features with over 20% values are missing or null.\n"
+)
+
+# Print column names of features where 20% or greater have missing or null values
+print(f"Incomplete Features: \n{incomplete_features}")
+# -
+
+
