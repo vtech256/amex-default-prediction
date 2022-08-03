@@ -21,3 +21,14 @@
 # In this competition, we’ll apply supervised machine learning to predict credit default. Specifically, we will leverage an industrial scale dataset to build binary classifaction models that challenge the current model in production. Training, validation, and testing datasets include: time-series, behavioral data, and anonymized customer profile information. Apart from creating a base model, we will explore numerous techniques and methodolgies to create an impressive model through feature engineering and using the data in a more organic way within a model.
 # ### Evaluation Criteria
 # If successful, our solution when implemented may yield better customer experiences for cardholders by making it easier for them to be approved for a new credit card. Top solutions may even challenge the credit default prediction model used by the world's largest payment card issuer at American Express.
+
+# ### Project Setup and Configuration
+
+# #### Notebook Configuration
+
+# +
+# Change working directory to project root
+import os
+
+if os.getcwd().split("/")[-1] == "notebooks":
+    os.chdir("../")
