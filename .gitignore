@@ -131,3 +131,5 @@ dmypy.json
 
 # Datasets
 data/
+notebooks/scratchpad.ipynb
+notebooks/to_merge.ipynb
