@@ -89,3 +89,33 @@ def get_incomplete_features(amex_dataset, threshold=0.85, verbose=True):
         print(f"Incomplete Features >= {threshold}%:\n{incomplete_features}")
 
 
+def create_agg_features(amex_dataset):
+    amex_numeric = amex_dataset.select_dtypes(include="number")
+
+    last_statement = amex_numeric.groupby("customer_ID").nth(-1)
+    first_statement = amex_numeric.groupby("customer_ID").nth(0)
+
+    lag_div = last_statement.div(first_statement).fillna(1)
+    lag_diff = last_statement.subtract(first_statement).fillna(0)
+
+    lag_div.columns = [col + "__lag_div" for col in lag_div.columns]
+    lag_diff.columns = [col + "__lag_diff" for col in lag_diff.columns]
+
+    numeric__agg_lag = pd.concat([lag_diff, lag_div], axis=1)
+
+    numeric__agg = amex_numeric.groupby("customer_ID").agg(
+        ["first", "last", "mean", "min", "max", "std", "sem"]
+    )
+    numeric__agg.columns = ["__".join(col) for col in numeric__agg.columns]
+
+    categorical__agg = (
+        amex_dataset.select_dtypes(include="category")
+        .groupby("customer_ID")
+        .agg(["first", "last", "count", "nunique"])
+    )
+    categorical__agg.columns = ["__".join(col) for col in categorical__agg.columns]
+
+    amex_agg = pd.concat([categorical__agg, numeric__agg, numeric__agg_lag], axis=1)
+
+    return amex_agg
+
