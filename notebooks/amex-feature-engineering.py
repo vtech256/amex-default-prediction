@@ -29,10 +29,11 @@ import seaborn as sns
 # +
 # Change working directory to project root
 if os.getcwd().split("/")[-1] == "notebooks":
+    # Change working dir to project root
     os.chdir("../")
     
-# Print the current working directory
-print(f'Current Dir: {os.getcwd()}')
+    # Print the current working directory
+    print(f'Current Dir: {os.getcwd()}')
     
 # Enable garbage collection
 gc.enable()
@@ -102,7 +103,7 @@ def create_agg_features(amex_dataset):
     lag_div.columns = [col + "__lag_div" for col in lag_div.columns]
     lag_diff.columns = [col + "__lag_diff" for col in lag_diff.columns]
 
-    numeric__agg_lag = pd.concat([lag_diff, lag_div], axis=1)
+    numeric__agg_lag = pd.concat([lag_diff, lag_div], axis=1).replace([np.inf, -np.inf], np.nan, inplace=True)
 
     numeric__agg = amex_numeric.groupby("customer_ID").agg(
         ["first", "last", "mean", "min", "max", "std", "sem"]
@@ -159,3 +160,35 @@ def make_datasets(read_feather=True, to_feather=True, to_csv=False):
     if to_csv:
         train_agg.to_csv('./data/interim/train_agg.csv')
         test_agg.to_csv('./data/interim/test_agg.csv')
+
+
+def features_dict(X_train, verbose=True):
+    numeric_features = (X_train
+                        .select_dtypes(include='number')
+                        .columns
+                        .tolist())
+
+    categorical_features = (X_train
+                            .select_dtypes(include='category')
+                            .columns
+                            .tolist())
+
+    ordinal_features = []
+    
+    all_features = X_train.columns.tolist()
+    
+    if verbose:
+        print(f'Numeric Features - Count(#): {len(numeric_features)}')
+        print(f'Categorical Features - Count(#): {len(categorical_features)}')
+        print(f'Ordinal Features - Count(#): {len(ordinal_features)}')
+    
+    return {
+        'num': numeric_features,
+        'cat': categorical_features,
+        'ord': ordinal_features,
+        'all': all_features,
+        'numeric': numeric_features,
+        'categorical': categorical_features,
+        'ordinal': ordinal_features,
+        'all_features': all_features
+    }
