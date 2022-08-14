@@ -1,13 +1,14 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: ipynb,py
 #     text_representation:
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
 #       jupytext_version: 1.14.1
 #   kernelspec:
-#     display_name: Python 3.9.12 ('base')
+#     display_name: Python 3.10.5 ('amex_v2')
 #     language: python
 #     name: python3
 # ---
@@ -56,8 +57,8 @@ def load_dataset(dataset, use_feather=True):
         raise ValueError
     fpaths = {
         "feather": {
-            "train": "./data/external/train_data.ftr",
-            "test": "./data/external/test_data.ftr",
+            "train": "./data/external/compressed/train_data.ftr",
+            "test": "./data/external/compressed/test_data.ftr",
             "train_agg": "./data/interim/train_agg.ftr",
             "test_agg": "./data/interim/test_agg.ftr",
         },
@@ -145,7 +146,16 @@ def make_features(amex_dataset):
     return amex_aggregated
 
 
-amex_agg = (load_dataset("train", use_feather=True)
-            .set_index('customer_ID')
-            .pipe(make_features))
-amex_agg.reset_index().to_feather('./data/interim/train_agg.ftr')
+def make_datasets(read_feather=True, to_feather=True, to_csv=False):
+    train_agg = (load_dataset('train', use_feather=read_feather)
+                 .pipe(make_features))
+    test_agg = (load_dataset("test", use_feather=read_feather)
+                .pipe(make_features))
+    
+    if to_feather:
+        train_agg.reset_index().to_feather('./data/interim/train_agg.ftr')
+        test_agg.reset_index().to_feather('./data/interim/test_agg.ftr')
+        
+    if to_csv:
+        train_agg.to_csv('./data/interim/train_agg.csv')
+        test_agg.to_csv('./data/interim/test_agg.csv')
