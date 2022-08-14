@@ -144,3 +144,8 @@ def make_features(amex_dataset):
             amex_dataset.groupby('customer_ID').tail(1).target)
     return amex_aggregated
 
+
+amex_agg = (load_dataset("train", use_feather=True)
+            .set_index('customer_ID')
+            .pipe(make_features))
+amex_agg.reset_index().to_feather('./data/interim/train_agg.ftr')
