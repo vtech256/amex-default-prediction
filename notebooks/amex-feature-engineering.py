@@ -119,3 +119,28 @@ def create_agg_features(amex_dataset):
 
     return amex_agg
 
+
+def make_features(amex_dataset):
+    incomplete_features = {
+        'D_87', 'D_88', 'D_108', 'D_110', 'D_111', 'B_39', 
+        'D_73', 'B_42', 'D_134', 'D_137', 'D_135', 'D_138', 
+        'D_136', 'R_9', 'B_29', 'D_106', 'D_132', 'D_49', 
+        'R_26', 'D_76', 'D_66', 'D_42'}
+    made_redundant = {'S_2'}
+    target_variable = {'target'}
+
+    invalid_cols = (incomplete_features | made_redundant | target_variable)
+    cols_to_drop = (amex_dataset
+                    .columns
+                    .intersection(invalid_cols)
+                    .tolist())
+
+    amex_aggregated = (amex_dataset
+                       .drop(cols_to_drop, axis=1)
+                       .pipe(create_agg_features))
+        
+    if 'target' in cols_to_drop:
+        amex_aggregated['target'] = (
+            amex_dataset.groupby('customer_ID').tail(1).target)
+    return amex_aggregated
+
