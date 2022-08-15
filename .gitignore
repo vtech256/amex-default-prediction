@@ -134,4 +134,3 @@ data/
 notebooks/scratchpad.ipynb
 notebooks/to_merge.ipynb
 .vscode
-.vscode/settings.json
