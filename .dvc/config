@@ -1,0 +1,9 @@
+[core]
+    autostage = true
+    remote = gdrive
+['remote "google-drive"']
+    url = gdrive://1GiiJRqq6CfzRSbOUQUpkrX766dvFmikZ
+['remote "gdrive"']
+    url = gdrive://1GiiJRqq6CfzRSbOUQUpkrX766dvFmikZ
+['remote "amex"']
+    url = gdrive://1GiiJRqq6CfzRSbOUQUpkrX766dvFmikZ

@@ -134,3 +134,4 @@ data/
 notebooks/scratchpad.ipynb
 notebooks/to_merge.ipynb
 .vscode/
+/data
