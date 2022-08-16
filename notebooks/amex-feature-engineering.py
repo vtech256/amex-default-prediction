@@ -143,7 +143,7 @@ def get_incomplete_features(amex_dataset, threshold=0.85, verbose=True):
         print(f"Incomplete Features >= {threshold}%:\n{incomplete_features}")
 
 
-def create_agg_features(amex_dataset):
+ef create_agg_features(amex_dataset):
     '''Function to create new features by aggregating the dataset by [TODO: add content].
     
     Parameters
@@ -160,34 +160,35 @@ def create_agg_features(amex_dataset):
     amex_numeric = amex_dataset.select_dtypes(include="number")
 
 
-    # Creating a new dataframe with the first and last rows of the dataframe.
+    # Create a new dataframe with the first and last rows of the dataframe.
     last_statement = amex_numeric.groupby("customer_ID").nth(-1)
     first_statement = amex_numeric.groupby("customer_ID").nth(0)
 
-    # Dividing the last statement by the first statement and filling the NaN values with 1.
+    # Divide the last statement by the first statement and filling the NaN values with 1.
     lag_div = (last_statement
                .div(first_statement)
                .replace(-np.inf, 0)
                .replace(np.inf, 2)
                .fillna(1))
 
-    # Subtracting the first statement from the last statement and filling the NaN values with 0.
+    # Subtract the first statement from the last statement and filling the NaN values with 0.
     lag_diff = (last_statement
                 .subtract(first_statement)
                 .replace([np.inf, -np.inf], np.nan)
                 .fillna(0))
 
-    # Creating a new column name for each column in the `lag_div` dataframe.
+    # Rename column names by appending lad_type previous name.
     lag_div.columns = [col + "__lag_div" for col in lag_div.columns]
     lag_diff.columns = [col + "__lag_diff" for col in lag_diff.columns]
 
-    # Creating a new dataframe by concatenating the `lag_diff` and `lag_div` dataframes.
+    # Concate `lag_diff` and `lag_div` to create a new DataFrame with aggregated lag features.
     numeric__agg_lag = pd.concat([lag_diff, lag_div], axis=1)
 
-    
+    # Group columns by customer_ID and calculate aggregated features with statistical measures
     numeric__agg = amex_numeric.groupby("customer_ID").agg(
-        ["first", "last", "mean", "min", "max", "std", "sem"]
+        ["last", "mean", "min", "max", "std"]
     )
+    # Rename each column by joining the two levels of column names.
     numeric__agg.columns = ["__".join(col) for col in numeric__agg.columns]
 
     # Group data by the customer ID; 
@@ -199,7 +200,7 @@ def create_agg_features(amex_dataset):
         .agg(["first", "last", "count", "nunique"])
     )
 
-    # Creating a new column name for each column in the `categorical__agg` dataframe.
+    # Rename each column by joining the two levels of column names.
     categorical__agg.columns = ["__".join(col) for col in categorical__agg.columns]
 
     # Concatenating the `categorical__agg`, `numeric__agg`, and `numeric__agg_lag` dataframes.
