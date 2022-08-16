@@ -6,9 +6,9 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.1
+#       jupytext_version: 1.14.0
 #   kernelspec:
-#     display_name: Python 3.10.5 ('amex_v2')
+#     display_name: Python 3.9.12 ('base')
 #     language: python
 #     name: python3
 # ---
@@ -136,15 +136,17 @@ xgb_clf = xgb.XGBClassifier(
     use_label_encoder=False,
     max_depth=7,
     early_stopping_rounds=5,
-    learning_rate=0.1,
+    subsample=0.88,
+    colsample_bytree=0.72,
+    n_estimators=128,
+    learning_rate=0.32,
     feval=amex_score,
     eval_metric=xgb__amex_metric,
     verbosity=3,
     seed=1123, n_jobs=-1)
 # -
 
-amex_train__agg = (load_dataset('train_agg', use_feather=True)
-                   .replace([np.inf, -np.inf], np.nan))
+amex_train__agg = load_dataset('train_agg', use_feather=True)
 
 # +
 X_train, X_test, y_train, y_test = train_test_split(
@@ -172,11 +174,18 @@ xgb_clf.fit(X_train__preprocessed, y_train,
 
 # +
 # Predict the labels of the test set: preds
-train_preds = xgb_clf.predict(X_train__preprocessed)
-test_preds = xgb_clf.predict(X_test__preprocessed)
+train_preds = xgb_clf.predict_proba(X_train__preprocessed)[:,1]
+test_preds = xgb_clf.predict_proba(X_test__preprocessed)[:,1]
 
 train_score = amex_score(y_train.values, train_preds)
 test_score = amex_score(y_test.values, test_preds)
 
 print(f'Train Score: {train_score}')
 print(f'Test Score: {test_score}')
+
+# +
+with open('models/feature_preprocessor.pkl','wb') as f:
+    pickle.dump(feature_preprocessor, f)
+
+with open('models/xgb_clf.pkl','wb') as f:
+    pickle.dump(xgb_clf, f)
