@@ -143,7 +143,7 @@ def get_incomplete_features(amex_dataset, threshold=0.85, verbose=True):
         print(f"Incomplete Features >= {threshold}%:\n{incomplete_features}")
 
 
-ef create_agg_features(amex_dataset):
+def create_agg_features(amex_dataset):
     '''Function to create new features by aggregating the dataset by [TODO: add content].
     
     Parameters

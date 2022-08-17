@@ -53,19 +53,21 @@ import xgboost as xgb
 # +
 # Change working directory to project root
 if os.getcwd().split("/")[-1] == "notebooks":
-    # Change working dir to project root
+    # Change dir to parent directory.
     os.chdir("../")
-
     # Print the current working directory
-    # print(f'Current Dir: {os.getcwd()}')
-
+    print(f'Current Dir: {os.getcwd()}')
+    
 # Enable garbage collection
 gc.enable()
 
-# Configure display options for Pandas
-# (*) Helpful when displaying DFs w/ numerous features
+# > Configure display options for Pandas
+# ---------------------------------------------------------------
+# Set display width to 1000.
 pd.set_option("display.width", 1000)
+# Set maximum number of rows to display to 500.
 pd.set_option("display.max_rows", 500)
+# Set maximum number of columns to display to 500.
 pd.set_option("display.max_columns", 500)
 
 
