@@ -46,6 +46,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 # -
 
 # ### Data Description
@@ -57,7 +58,7 @@ import seaborn as sns
 # |`test_data.csv`    | corresponding test data; goal: predict `target label` for each `customer_ID`|
 # |`sample_submission.csv` | sample submission file in the correct format|
 # #### Feature/Target Variables
-# The dataset contains aggregated profile features for each customer at each statement date. 
+# The dataset contains aggregated profile features for each customer at each statement date.
 #
 # Features are anonymized and normalized, and fall into the following general categories:
 # | Prefix | Feature Type |
@@ -68,7 +69,7 @@ import seaborn as sns
 # |`B_*`| Balance |
 # |`R_*`| Risk |
 #
-# with the following features being categorical: 
+# with the following features being categorical:
 #     `B_30`, `B_38`, `D_114`, `D_116`, `D_117`, `D_120`, `D_126`, `D_63`, `D_64`, `D_66`, `D_68`
 #
 #
@@ -90,15 +91,15 @@ import seaborn as sns
 # // TODO: Add information regarding the source, advantages and limitations in using the compressed datasets
 
 # +
-#train = pd.read_csv("./data/raw/train_data.csv", low_memory=False)
-#test = pd.read_csv("./data/raw/test_data.csv")
+# train = pd.read_csv("./data/raw/train_data.csv", low_memory=False)
+# test = pd.read_csv("./data/raw/test_data.csv")
 
 # +
 # Load compressed datasets
 # Source: https://www.kaggle.com/datasets/munumbutt/amexfeather
 
 train = pd.read_feather("./data/external/compressed/train_data.ftr")
-#test = pd.read_feather("./data/external/compressed/test_data.ftr")
+# test = pd.read_feather("./data/external/compressed/test_data.ftr")
 # -
 
 # Preview the first five rows of the training data
@@ -106,27 +107,28 @@ train.head()
 
 # Print the shape of the DataFrame for the training set
 print(f"Training Data: Shape == {train.shape}")
-print(f"\nThe training set consists of {train.shape[0]}\
+print(
+    f"\nThe training set consists of {train.shape[0]}\
     observations with {train.shape[1]} features\
-    and 1 target variable.")
+    and 1 target variable."
+)
 
+# Printing the number of observations and features in the dataset.
 train.info()
 
-# +
 # Preview the first five rows of the testing set
-#test.head(5)
-# -
+test.head(5)
 
 # Print the shape of the DataFrame for the testing dataset
-'''
+"""
 print(f"Testing Data: Shape == {test.shape}")
 print(
     f"\nThe testing set consists of {test.shape[0]} observations with {test.shape[1]} features."
 )
-'''
+"""
 
 # +
-#test.info()
+# test.info()
 
 # +
 # 1-2) Sum the number of incomplete (missing or null) values in each column
@@ -136,43 +138,53 @@ pct_incomplete = (
     train.isna().sum().div(len(train)).mul(100).sort_values(ascending=False)
 )
 
-# Subset pct_incomplete to select incomplete features (Threshold: >20%)
+# Create a set of features which have 20% or more missing values.
 incomplete_features = set(pct_incomplete[pct_incomplete >= 20].index)
 
 # +
-# Print the count of incomplete features
+# Print the number of features with over 20% missing values.
 print(
     f"{len(incomplete_features)} features with over 20% values are missing or null.\n"
 )
 
-# Print column names of features where 20% or greater have missing or null values
+# Print the names of features where 20% or greater have missing or null values
 print(f"Incomplete Features: \n{incomplete_features}")
 # -
 
 #
 
-statement_counts = (train
-                    .groupby('customer_ID')
-                    .size()
-                    .value_counts(normalize=True)
-                    .sort_index()
-                    .reset_index()
-                    .rename(columns={
-                        'index':'n_statements', 0: 'pct_customers'}
-                    ))
+# Grouping the data by customer_ID and then counting the number of statements per customer.
+statement_counts = (
+    train.groupby("customer_ID")
+    .size()
+    .value_counts(normalize=True)
+    .sort_index()
+    .reset_index()
+    .rename(columns={"index": "n_statements", 0: "pct_customers"})
+)
 
 statement_counts
 
-sns.barplot(data=statement_counts, x='n_statements', y='pct_customers')
+# Plotting a barplot of the number of statements per customer.
+sns.barplot(data=statement_counts, x="n_statements", y="pct_customers")
 
-colors = sns.color_palette('pastel')
-fig = plt.figure(figsize = (12, 12))
-plt.pie(x=statement_counts['pct_customers'][::-1], 
-        labels=statement_counts['n_statements'][::-1],
-        colors = colors, 
-        autopct = '%0.0f%%')
-plt.title('Number of Statements per Customer')
-plt.legend(loc='upper right')
+# Creating a list of colors to be used in the pie chart.
+colors = sns.color_palette("pastel")
+# Creating a figure object with a width of 12 and a height of 12.
+fig = plt.figure(figsize=(12, 12))
+
+plt.pie(
+    x=statement_counts["pct_customers"][::-1],
+    labels=statement_counts["n_statements"][::-1],
+    colors=colors,
+    autopct="%0.0f%%",
+)
+
+# Set the title of the pie chart.
+plt.title("Number of Statements per Customer")
+# Create a legend for the pie chart.
+plt.legend(loc="upper right")
+# Display the plot.
 plt.show()
 
 
@@ -181,35 +193,56 @@ plt.show()
 # def amex_vars(data=train, select=None, include_target=False, y_col='target'):
 # -
 
-def amex_filter(data, feature_type='all', target=False):
+
+def amex_filter(data, feature_type="all", target=False):
+    """
+    > The function takes a dataframe and returns a subset of it based on the feature type
+
+    Args:
+      data: the dataframe to be filtered
+      feature_type: str, default 'all'. Defaults to all
+      target: if True, the target column will be included in the output. Defaults to False
+    """
+    # Create a dictionary with the keys being the feature groups and the values
+    # being the columns that belong to that group.
     features_dict = {
-        'deliquency': data.columns[data.columns.str.startswith('D_')],
-        'balance': data.columns[data.columns.str.startswith('B_')],
-        'spend': data.columns[data.columns.str.startswith('S_')],
-        'risk': data.columns[data.columns.str.startswith('R_')],
-        'payment': data.columns[data.columns.str.startswith('P_')],
-        'numeric': data.select_dtypes(include='number').columns,
-        'categorical': data.select_dtypes(include='category').columns,
-        'all': data.columns}
-   
+        "deliquency": data.columns[data.columns.str.startswith("D_")],
+        "balance": data.columns[data.columns.str.startswith("B_")],
+        "spend": data.columns[data.columns.str.startswith("S_")],
+        "risk": data.columns[data.columns.str.startswith("R_")],
+        "payment": data.columns[data.columns.str.startswith("P_")],
+        "numeric": data.select_dtypes(include="number").columns,
+        "categorical": data.select_dtypes(include="category").columns,
+        "all": data.columns,
+    }
+
+    # Checking if the input is a string. If it is not, raise a TypeError.
     if not isinstance(feature_type, str):
         raise TypeError(
-            f'Invalid input - expected str, but acutal: {type(feature_type)}')
+            f"Invalid input - expected str, but acutal: {type(feature_type)}"
+        )
+    # Check if the feature_type is in features_dict.keys(). If not, raise a ValueError.
     elif feature_type not in features_dict.keys():
-        raise ValueError('Invalid feature selection')
-    elif target and 'target' not in data.columns:
+        raise ValueError("Invalid feature selection")
+    elif target and "target" not in data.columns:
         raise ValueError("Target is not present in dataset!")
-    
+
+    # Retrive list of the columns that are associated with the feature type.
     f_columns = list(features_dict.get(feature_type))
-    if target and 'target' not in f_columns: 
-        f_columns.append('target')
-    elif 'target' in f_columns:
-        f_columns.remove('target')
-    
+
+    # Check if keep_target is true and if the target is present in the DataFrame.
+    if target and "target" not in f_columns:
+        # If not, add it to the DataFrame as a new column.
+        f_columns.append("target")
+    # If keep_target is false, check if the target is present in the DataFrame.
+    # If target column is present, then remove it from the DataFrame.
+    elif "target" in f_columns:
+        f_columns.remove("target")
+
     return data.loc[:, f_columns]
 
 
-amex_filter(train, feature_type='categorical')
+amex_filter(train, feature_type="categorical")
 
 # df_deliquency = train.iloc[:, train.columns.str.startswith('D_')]
 # df_balance = train.iloc[:, train.columns.str.startswith('B_')]
@@ -217,36 +250,40 @@ amex_filter(train, feature_type='categorical')
 # df_risk = train.iloc[:, train.columns.str.startswith('R_')]
 # df_payment = train.iloc[:, train.columns.str.startswith('P_')]
 
-(train
-.pipe(amex_filter, feature_type='deliquency')
-.pipe(amex_filter, feature_type='categorical')
-.describe())
+(
+    train.pipe(amex_filter, feature_type="deliquency")
+    .pipe(amex_filter, feature_type="categorical")
+    .describe()
+)
 
-(train
-.pipe(amex_filter, feature_type='deliquency')
-.pipe(amex_filter, feature_type='numeric')
-.describe())
+(
+    train.pipe(amex_filter, feature_type="deliquency")
+    .pipe(amex_filter, feature_type="numeric")
+    .describe()
+)
 
-(train
-.pipe(amex_filter, feature_type='balance')
-.pipe(amex_filter, feature_type='categorical')
-.describe())
+(
+    train.pipe(amex_filter, feature_type="balance")
+    .pipe(amex_filter, feature_type="categorical")
+    .describe()
+)
 
-(train
-.pipe(amex_filter, feature_type='balance')
-.pipe(amex_filter, feature_type='numeric')
-.describe())
+(
+    train.pipe(amex_filter, feature_type="balance")
+    .pipe(amex_filter, feature_type="numeric")
+    .describe()
+)
 
-df_spend = amex_filter(train, feature_type='spend')
+df_spend = amex_filter(train, feature_type="spend")
 df_spend.describe()
 
-df_risk = amex_filter(train, feature_type='risk')
+df_risk = amex_filter(train, feature_type="risk")
 df_risk.describe()
 
-df_payment = amex_filter(train, feature_type='payment')
+df_payment = amex_filter(train, feature_type="payment")
 df_payment.describe()
 
-train.target.astype('category').describe()
+train.target.astype("category").describe()
 
 train.target.value_counts(normalize=True)
 
@@ -255,23 +292,25 @@ train.target.value_counts(normalize=True)
 # last_statement.target.value_counts(normalize=True)
 # -
 
-y_amex = train.set_index('customer_ID').groupby('customer_ID').tail(1).target
-X_amex = train.set_index('customer_ID').drop(['S_2', 'target'], axis=1)
+y_amex = train.set_index("customer_ID").groupby("customer_ID").tail(1).target
+X_amex = train.set_index("customer_ID").drop(["S_2", "target"], axis=1)
 
 
 def aggregate_features(X_amex):
-    numeric__agg = (X_amex
-                    .select_dtypes(include='number')
-                    .groupby('customer_ID')
-                    .agg(['first', 'last', 'mean', 'min', 'max', 'std']))
-    
-    categorical__agg = (X_amex
-                    .select_dtypes(include='category')
-                    .groupby('customer_ID')
-                    .agg(['first', 'last', 'count', 'nunique']))
+    numeric__agg = (
+        X_amex.select_dtypes(include="number")
+        .groupby("customer_ID")
+        .agg(["first", "last", "mean", "min", "max", "std"])
+    )
+
+    categorical__agg = (
+        X_amex.select_dtypes(include="category")
+        .groupby("customer_ID")
+        .agg(["first", "last", "count", "nunique"])
+    )
 
     X_amex__agg = pd.concat([categorical__agg, numeric__agg], axis=1)
-    X_amex__agg.columns = ['__'.join(col) for col in X_amex__agg.columns]
+    X_amex__agg.columns = ["__".join(col) for col in X_amex__agg.columns]
 
     return X_amex__agg
 
@@ -304,6 +343,3 @@ from sklearn.model_selection import train_test_split
 
 # +
 # (X_agg.index == amex_y.index).all()
-# -
-
-
